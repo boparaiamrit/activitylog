@@ -15,8 +15,6 @@ class ActivityLogServiceProvider extends ServiceProvider
 		$this->publishes([
 			__DIR__ . '/../config/activitylog.php' => config_path('activitylog.php'),
 		], 'config');
-		
-		$this->mergeConfigFrom(__DIR__ . '/../config/activitylog.php', 'activitylog');
 	}
 	
 	/**
@@ -25,6 +23,8 @@ class ActivityLogServiceProvider extends ServiceProvider
 	public function register()
 	{
 		require 'helpers.php';
+		
+		$this->mergeConfigFrom(__DIR__ . '/../config/activitylog.php', 'activitylog');
 		
 		$this->app->singleton('activitylog', function ($app) {
 			return new ActivityLogger($app['auth'], $app['config']);
