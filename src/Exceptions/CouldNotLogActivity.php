@@ -1,6 +1,6 @@
 <?php
 
-namespace Spatie\Activitylog\Exceptions;
+namespace Boparaiamrit\ActivityLog\Exceptions;
 
 use Exception;
 

@@ -1,9 +1,9 @@
 <?php
 
-namespace Spatie\Activitylog\Exceptions;
+namespace Boparaiamrit\ActivityLog\Exceptions;
 
 use Exception;
-use Spatie\Activitylog\Models\Activity;
+use Boparaiamrit\ActivityLog\Models\Activity;
 
 class InvalidConfiguration extends Exception
 {

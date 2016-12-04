@@ -32,7 +32,7 @@ return [
 
     /*
      * This model will be used to log activity. The only requirement is that
-     * it should be or extend the Spatie\Activitylog\Models\Activity model.
+     * it should be or extend the Boparaiamrit\ActivityLog\Models\Activity model.
      */
-    'activity_model' => \Spatie\Activitylog\Models\Activity::class,
+    'activity_model' => \Boparaiamrit\ActivityLog\Models\Activity::class,
 ];

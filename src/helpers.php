@@ -1,12 +1,20 @@
 <?php
 
-use Spatie\Activitylog\ActivityLogger;
+use Boparaiamrit\ActivityLog\ActivityLogger;
 
-if (! function_exists('activity')) {
-    function activity(string $logName = null): ActivityLogger
-    {
-        $defaultLogName = config('laravel-activitylog.default_log_name');
-
-        return app(ActivityLogger::class)->useLog($logName ?? $defaultLogName);
-    }
+if (!function_exists('activity')) {
+	/**
+	 * @param string|null $logName
+	 *
+	 * @return ActivityLogger
+	 */
+	function activity(string $logName = null): ActivityLogger
+	{
+		$ActivityLogger = app('activitylog');
+		
+		$defaultLogName = config('activitylog.default_log_name');
+		$ActivityLogger->useLog($logName ?? $defaultLogName);
+		
+		return $ActivityLogger;
+	}
 }
