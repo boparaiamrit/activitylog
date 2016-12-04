@@ -13,7 +13,7 @@ if (!function_exists('activity')) {
 		$ActivityLogger = app('activitylog');
 		
 		$defaultLogName = config('activitylog.default_log_name');
-		$ActivityLogger->useLog($logName ?? $defaultLogName);
+		$ActivityLogger->useLogName($logName ?? $defaultLogName);
 		
 		return $ActivityLogger;
 	}

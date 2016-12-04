@@ -26,11 +26,11 @@ class CleanActivityLogCommand extends Command
 	{
 		$this->comment('Cleaning activity log...');
 		
-		$maxAgeInDays = config('activitylog.delete_records_older_than_days');
+		$maxAgeInDays = config('activitylog.expires');
 		
-		$cutOffDate = Carbon::now()->subDays($maxAgeInDays)->format('Y-m-d H:i:s');
+		$cutOffDate = Carbon::now()->subDays($maxAgeInDays);
 		
-		$activity = app('activitylog:instance');
+		$activity = app('activitylog')->getActivityModel();
 		
 		$amountDeleted = $activity::where('created_at', '<', $cutOffDate)->delete();
 		

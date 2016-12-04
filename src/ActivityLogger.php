@@ -4,28 +4,34 @@ namespace Boparaiamrit\ActivityLog;
 
 
 use Boparaiamrit\ActivityLog\Exceptions\CouldNotLogActivity;
+use Boparaiamrit\ActivityLog\Exceptions\InvalidConfiguration;
 use Boparaiamrit\ActivityLog\Models\Activity;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Config\Repository;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Traits\Macroable;
+use Jenssegers\Mongodb\Eloquent\Model;
 
 class ActivityLogger
 {
 	use Macroable;
 	
-	/** @var \Illuminate\Auth\AuthManager */
-	protected $auth;
+	/** @var AuthManager */
+	protected $Auth;
+	
+	/**
+	 * @var Repository
+	 */
+	protected $Config;
 	
 	protected $logName = '';
 	
 	/** @var bool */
 	protected $logEnabled;
 	
-	/** @var \Illuminate\Database\Eloquent\Model */
+	/** @var Model */
 	protected $performedOn;
 	
-	/** @var \Illuminate\Database\Eloquent\Model */
+	/** @var Model */
 	protected $causedBy;
 	
 	/** @var \Illuminate\Support\Collection */
@@ -33,16 +39,15 @@ class ActivityLogger
 	
 	public function __construct(AuthManager $auth, Repository $config)
 	{
-		$this->auth = $auth;
+		$this->Auth   = $auth;
+		$this->Config = $config;
 		
 		$this->properties = collect();
 		
-		$authDriver = $config['activitylog']['default_auth_driver'] ?? $auth->getDefaultDriver();
-		
+		$authDriver     = $config['activitylog']['auth_driver'] ?? $auth->getDefaultDriver();
 		$this->causedBy = $auth->guard($authDriver)->user();
 		
-		$this->logName = $config['activitylog']['default_log_name'];
-		
+		$this->logName    = $config['activitylog']['log_name'];
 		$this->logEnabled = $config['activitylog']['enabled'] ?? true;
 	}
 	
@@ -53,13 +58,8 @@ class ActivityLogger
 		return $this;
 	}
 	
-	public function on(Model $model)
-	{
-		return $this->performedOn($model);
-	}
-	
 	/**
-	 * @param \Illuminate\Database\Eloquent\Model|int|string $modelOrId
+	 * @param Model|int|string $modelOrId
 	 *
 	 * @return $this
 	 */
@@ -70,11 +70,6 @@ class ActivityLogger
 		$this->causedBy = $model;
 		
 		return $this;
-	}
-	
-	public function by($modelOrId)
-	{
-		return $this->causedBy($modelOrId);
 	}
 	
 	/**
@@ -102,16 +97,11 @@ class ActivityLogger
 		return $this;
 	}
 	
-	public function useLog(string $logName)
+	public function useLogName(string $logName)
 	{
 		$this->logName = $logName;
 		
 		return $this;
-	}
-	
-	public function inLog(string $logName)
-	{
-		return $this->useLog($logName);
 	}
 	
 	/**
@@ -125,9 +115,9 @@ class ActivityLogger
 			return null;
 		}
 		
-		$Activity           = app('activitylog:instance');
-		$Activity->log_name = $this->logName;
+		$Activity = $this->getActivityModel();
 		
+		$Activity->log_name = $this->logName;
 		if ($this->performedOn) {
 			$Activity->subject()->associate($this->performedOn);
 		}
@@ -144,11 +134,11 @@ class ActivityLogger
 	}
 	
 	/**
-	 * @param \Illuminate\Database\Eloquent\Model|int|string $modelOrId
+	 * @param Model|int|string $modelOrId
 	 *
-	 * @throws \Boparaiamrit\ActivityLog\Exceptions\CouldNotLogActivity
+	 * @throws CouldNotLogActivity
 	 *
-	 * @return \Illuminate\Database\Eloquent\Model
+	 * @return Model
 	 */
 	protected function normalizeCauser($modelOrId): Model
 	{
@@ -157,7 +147,7 @@ class ActivityLogger
 		}
 		
 		/** @noinspection PhpUndefinedMethodInspection */
-		if ($model = $this->auth->getProvider()->retrieveById($modelOrId)) {
+		if ($model = $this->Auth->getProvider()->retrieveById($modelOrId)) {
 			return $model;
 		}
 		
@@ -183,5 +173,22 @@ class ActivityLogger
 			
 			return array_get($attributeValue, $propertyName, $match);
 		}, $description);
+	}
+	
+	/**
+	 * @return Activity
+	 *
+	 * @throws InvalidConfiguration
+	 */
+	public function getActivityModel(): Activity
+	{
+		/** @noinspection PhpUndefinedMethodInspection */
+		$activityModelClass = $this->Config->get('activitylog.activity_model');
+		
+		if (!is_a($activityModelClass, Activity::class, true)) {
+			throw InvalidConfiguration::modelIsNotValid($activityModelClass);
+		}
+		
+		return new $activityModelClass;
 	}
 }

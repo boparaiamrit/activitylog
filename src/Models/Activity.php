@@ -5,7 +5,6 @@ namespace Boparaiamrit\ActivityLog\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Support\Collection;
 use Jenssegers\Mongodb\Eloquent\Model;
 
 /**
@@ -21,13 +20,6 @@ class Activity extends Model
 	
 	public function subject(): MorphTo
 	{
-		$isTrashRequired = config('activitylog.subject_returns_soft_deleted_models');
-		
-		if ($isTrashRequired) {
-			/** @noinspection PhpUndefinedMethodInspection */
-			return $this->morphTo()->withTrashed();
-		}
-		
 		return $this->morphTo();
 	}
 	
@@ -46,13 +38,6 @@ class Activity extends Model
 	public function getExtraProperty(string $propertyName)
 	{
 		return array_get(collect($this->properties)->toArray(), $propertyName);
-	}
-	
-	public function getChangesAttribute(): Collection
-	{
-		return collect(array_filter($this->properties->toArray(), function ($key) {
-			return in_array($key, ['attributes', 'old']);
-		}, ARRAY_FILTER_USE_KEY));
 	}
 	
 	public function scopeInLog(Builder $Query, ...$logNames): Builder
